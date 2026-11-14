@@ -12,11 +12,18 @@ Recorded 2026-11-14 (Task 1).
   - cmdline-tools at `~/Android/Sdk/cmdline-tools/latest`
   - Licenses accepted.
 - **adb** — preinstalled at `~/.local/bin/adb`; SDK platform-tools now also provide it.
+- **GitHub push path** — the machine's default SSH key belongs to account
+  `mhasanmuammar`, but releases/pushes here go to `hasanmuammar`. Push via
+  HTTPS with `gh auth setup-git` (token credential helper), NOT ssh:
+  `git remote set-url origin https://github.com/hasanmuammar/usb-tether-tile.git`.
+- **Release signing** — keystore at `~/keystores/usb-tether-tile.jks`
+  (PKCS12: key password must equal the store password), credentials in
+  `keystore.properties` (repo root, gitignored; backup copy at
+  `~/keystores/usb-tether-tile.properties`). Losing the keystore means losing
+  the ability to ship updates under the same package name.
 - Gradle: not installed system-wide; the project uses the Gradle wrapper.
-
-> `ANDROID_HOME` is not exported by default shell startup. Prefix commands with
-> `export ANDROID_HOME=~/Android/Sdk` or rely on the project's
-> `local.properties` (written during Task 2) pointing at it.
+  The JDK 21 pin lives in `~/.gradle/gradle.properties` (`org.gradle.java.home`),
+  not in the repo.
 
 ## Phone
 
