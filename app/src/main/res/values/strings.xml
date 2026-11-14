@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">USB Tether</string>
+    <string name="status_placeholder">USB Tether Tile</string>
+</resources>
