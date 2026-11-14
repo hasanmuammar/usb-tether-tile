@@ -12,7 +12,6 @@ import java.util.concurrent.Executors
 class UsbTetherTileService : TileService() {
 
     private val TAG = "UsbTetherTile"
-
     private val executor = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private var registration: TetherObservation.Registration? = null
@@ -30,20 +29,8 @@ class UsbTetherTileService : TileService() {
         }
     }
 
+    /** Opens the tethering settings via the fallback chain; UI thread only. */
     private fun openFallback() {
-        for (intent in tetherSettingsIntents()) {
-            try {
-                startActivityAndCollapse(intent)
-                return
-            } catch (_: Exception) {
-                // Try the next fallback.
-            }
-        }
-        Toast.makeText(this, "No tethering settings screen found", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun openFallbackViaPendingIntent() {
-        // PendingIntent variant is required on API 34+ for tiles.
         for (raw in tetherSettingsIntents()) {
             try {
                 val pi = PendingIntent.getActivity(
@@ -65,25 +52,25 @@ class UsbTetherTileService : TileService() {
             PrivilegedTether.setUsbTethering(enable)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "toggle failed", e)
-            -1
+            TOGGLE_EXCEPTION
         }
+        val outcome = interpretToggleResult(result, enabled = enable)
         android.util.Log.d(TAG, "toggle result=$result")
         main.post {
-            if (result == 0) {
-                Toast.makeText(
-                    this,
-                    if (enable) "USB tethering on" else "USB tethering off",
-                    Toast.LENGTH_SHORT
-                ).show()
-            } else {
-                Toast.makeText(
-                    this,
-                    "Connect a USB cable (error $result)",
-                    Toast.LENGTH_SHORT
-                ).show()
-                openFallbackViaPendingIntent()
-            }
+            Toast.makeText(this, outcome.message, Toast.LENGTH_SHORT).show()
             update()
+            if (outcome.success && enable) {
+                // Enable "succeeded" per the service; verify a tethered iface
+                // actually appears (the service can return 0 and do nothing).
+                main.postDelayed({
+                    if (usbIface() == null) {
+                        Toast.makeText(
+                            this, "No USB network appeared — check the cable",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }, CABLE_CHECK_DELAY_MS)
+            }
         }
     }
 
@@ -101,19 +88,23 @@ class UsbTetherTileService : TileService() {
 
     override fun onClick() {
         super.onClick()
-        android.util.Log.d("UsbTetherTile", "onClick fired")
+        android.util.Log.d(TAG, "onClick fired")
         executor.execute {
             when (status()) {
                 ShizukuStatus.READY -> toggleAndReport()
-                ShizukuStatus.NEEDS_PERMISSION -> {
+                ShizukuStatus.NEEDS_PERMISSION -> main.post {
                     val intent = Intent(this, MainActivity::class.java)
                     val pi = PendingIntent.getActivity(
                         this, 0, intent, PendingIntent.FLAG_IMMUTABLE
                     )
                     startActivityAndCollapse(pi)
                 }
-                else -> openFallbackViaPendingIntent()
+                else -> main.post { openFallback() }
             }
         }
+    }
+
+    private companion object {
+        const val CABLE_CHECK_DELAY_MS = 2000L
     }
 }
