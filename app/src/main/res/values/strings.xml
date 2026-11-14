@@ -1,4 +1,14 @@
 <resources>
     <string name="app_name">USB Tether</string>
+    <string name="tile_label">USB tether</string>
     <string name="status_placeholder">USB Tether Tile</string>
+    <string name="status_ready">Shizuku is ready — use the tile</string>
+    <string name="status_needs_permission">Shizuku permission needed</string>
+    <string name="status_not_running">Shizuku is not running — start it in the Shizuku app</string>
+    <string name="status_not_installed">Shizuku is not installed</string>
+    <string name="action_grant">Grant Shizuku permission</string>
+    <string name="action_open_shizuku">Open Shizuku</string>
+    <string name="action_install_shizuku">Install Shizuku</string>
+    <string name="action_toggle_from_tile">Toggle from the QS tile</string>
+    <string name="action_open_settings">Open tethering settings</string>
 </resources>
